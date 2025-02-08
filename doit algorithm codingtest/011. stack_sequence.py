@@ -1,21 +1,26 @@
-n = int(input())
+import sys
+input = sys.stdin.readline
 
-lst = [int(input()) for _ in range(n)]
+N = int(input())
+lst = [int(i) for i in range(1,N+1)]
+answer = [int(input()) for i in range(N)]
 
-stack = []
-lst_pointer = 0
-answer = []
-for i in range(1,n+1):
-    answer.append("+")
-    stack.append(i)
-    while stack[-1]>=lst[lst_pointer]:  # while stack and stack[-1] == lst[lst_pointer]로 하면 더 간결!
-        answer.append("-")
-        stack.pop(-1)
-        lst_pointer+=1
-        if not stack:
-            break
-if len(stack):  # if stack
+answer_list = []
+stk = []
+
+idx = 0
+for i in lst:
+    stk.append(i)
+    answer_list.append(["+", i])
+
+    while stk and answer[idx] == stk[-1]:
+        stk.pop(-1)
+        answer_list.append(["-", i])
+        idx += 1
+
+if stk:
     print("NO")
-else:
-    for j in answer:
-        print(j)
+else:        
+    for a in answer_list:
+        print(a[0])
+
