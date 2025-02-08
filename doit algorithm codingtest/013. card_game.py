@@ -1,17 +1,13 @@
+import sys
 from collections import deque
 
+input = sys.stdin.readline
 N = int(input())
 
-dq = deque([i+1 for i in range(N)])
+lst = deque([int(i) for i in range(1,N+1)])
 
-while len(dq)>1:
-    #print(dq)
-    dq.popleft()
-    #print(dq)
-    dq.append(dq[0])  # dq.append(dq.popleft()) 한 번에
-    #print(dq)
-    dq.popleft()
-    #print(dq)
+while len(lst) > 1:
+    lst.popleft()
+    lst.append(lst.popleft())
 
-print(dq[0])
-print(dir(dq))
+print(lst[0])
