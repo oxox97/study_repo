@@ -41,4 +41,4 @@ if result:
     for x in result:
         print(x)
 else:
-    print(-1)
+    print(-1) #
