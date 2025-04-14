@@ -1,10 +1,14 @@
-n = int(input())
+import sys
+input = sys.stdin.readline
 
-lst = [int(i) for i in input().split()]
+N = int(input())
 
-max_score = max(lst)
+scores = list(map(int, input().split()))
 
-new_lst = [j/max_score*100 for j in lst]
+# print(scores)
 
-print(sum(new_lst)/n)
+M = max(scores)
 
+adjusted_scores = [s/M*100 for s in scores]
+
+print(sum(adjusted_scores)/N)

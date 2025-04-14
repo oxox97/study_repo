@@ -1,9 +1,8 @@
-n = int(input())
+import sys
+# input = sys.stdin.readline
 
-lst = list(input())  # 숫자 한 자리씩 나누어 받기
+N = int(input())  # 숫자 한 자리씩 나누어 받기
 
-lst = [int(i) for i in lst]
+nums = sum(list(map(int, list(input()))))
 
-print(lst)
-
-print(sum(lst))
+print(nums)
