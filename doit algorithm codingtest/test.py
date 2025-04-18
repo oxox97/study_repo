@@ -1,22 +1,23 @@
-# 구간 합 알고리즘 ⭐️
-# O(N+M)
-# 1. 정의 : prefix_sum = [0] * (N+1)  # base는 합의 항등원인 0 (곱은 1)
-# 2. prefix_sum[i+1] = prefix_sum[i] + lst[i]
-# 3. a = prefix_sum[e] - prefix_sum[s-1]
+# 2차원 구간 합
+# prefix_sum -> psum
 
 import sys
 input = sys.stdin.readline
 
 N, M = map(int, input().split())
 
-lst = list(map(int, input().split()))
+mat = [list(map(int, input().split())) for _ in range(N)]  # 0-based mat
 
-prefix_sum = [0] * (N+1)  # base는 합의 항등원인 0 (곱은 1)
+psum_mat = [[0] * (N+1) for _ in range(N+1)]  # 1-based mat
 
-for i in range(N):
-    prefix_sum[i+1] = prefix_sum[i] + lst[i]
-
+for r in range(N):
+    for c in range(N):
+        psum_mat[r+1][c+1] = (
+            psum_mat[r+1][c] + psum_mat[r][c+1]
+            - psum_mat[r][c] + mat[r][c]
+        ) # psum_mat은 1-based index라서 [r+1][c+1]이 아닌, [r][c]
+        
 for _ in range(M):
-    s, e = map(int, input().split())
-    a = prefix_sum[e] - prefix_sum[s-1]
+    x1, y1, x2, y2 = map(int, input().split())
+    a = psum_mat[x2][y2] - psum_mat[x2][y1-1] - psum_mat[x1-1][y2] + psum_mat[x1-1][y1-1]
     print(a)
