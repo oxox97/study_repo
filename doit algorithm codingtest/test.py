@@ -1,23 +1,21 @@
-# 2차원 구간 합
-# prefix_sum -> psum
+# 오큰수 (NGE)
 
 import sys
 input = sys.stdin.readline
 
-N, M = map(int, input().split())
+N = int(input())
+lst = list(map(int, input().split()))
 
-mat = [list(map(int, input().split())) for _ in range(N)]  # 0-based mat
+answer = [-1] * (N)
+stk = []  # ⭐️ 오큰수가 정해지지 않은 리스트의 인덱스 저장
 
-psum_mat = [[0] * (N+1) for _ in range(N+1)]  # 1-based mat
+for i in range(N):
+    # 오큰수가 정해지지 않은 인덱스가 있고 (len(stk) > 0) &
+    # 현재 기준 값이 스택 top 인덱스의 값보다 크면 (lst[i] > lst[stk[-1]])
+    # 스택에서 해당 인덱스 제거(pop)하면서 오큰수 할당
+    while stk and lst[i] > lst[stk[-1]]:
+        answer[stk.pop()] = lst[i]   
+    stk.append(i)  # 차례대로 인덱스 넣어주기
 
-for r in range(N):
-    for c in range(N):
-        psum_mat[r+1][c+1] = (
-            psum_mat[r+1][c] + psum_mat[r][c+1]
-            - psum_mat[r][c] + mat[r][c]
-        ) # psum_mat은 1-based index라서 [r+1][c+1]이 아닌, [r][c]
-        
-for _ in range(M):
-    x1, y1, x2, y2 = map(int, input().split())
-    a = psum_mat[x2][y2] - psum_mat[x2][y1-1] - psum_mat[x1-1][y2] + psum_mat[x1-1][y1-1]
-    print(a)
+for a in answer:
+    print(a, end=" ")
