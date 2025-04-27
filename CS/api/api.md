@@ -5,4 +5,6 @@
 - 요청(request) & 응답(response)
 - REST API : 서버-클라이언트 데이터 주고받는 규칙
 - FastAPI : 간단하게 REST API 서버 만드는 파이썬 프레임 워크
-- GET : 데이터 조회 / POST : 데이터 저장 (복잡한 조건 조회, 보통 body 있음)
+- 요청 방식
+    - GET : url 파라미터를 이용하여 가벼운 데이터 조회
+    - POST : body를 사용해서 데이터 저장 (+복잡한 조건 데이터 조회)

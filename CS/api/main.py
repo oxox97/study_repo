@@ -25,3 +25,6 @@ def get_price(item: Item):
 @app.get("/items/", response_model=Dict[str, float])
 def get_all_items():
     return price_table
+
+# 서버 띄우기 (기본: 로컬)
+# python3 -m uvicorn main:app --reload
