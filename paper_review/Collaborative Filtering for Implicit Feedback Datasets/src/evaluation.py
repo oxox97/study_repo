@@ -1,82 +1,69 @@
-import numpy as np
-
-def precision_at_k(recommended_items, ground_truth, k=10):
-    """
-    Precision@K
-    recommended_items: list of item ids recommended (길이 >= k)
-    ground_truth: set of items that are actually relevant
-    """
-    recommended_k = recommended_items[:k]
-    hits = len(set(recommended_k) & set(ground_truth))
-    return hits / k
+# metric
+# @K: 추천한 아이템 상위 K개
+# Hit_Rate@K: 적중률, 추천이 정답을 포함했으면 1 아니면 0을 유저별로 평균. 하지만 순위는 반영하지 않아 NDCG와 같은 순위 기반 지표랑 같이 씀
+# MAP@K: Mean Average Precision, 맞추긴 했는데, 얼마나 앞쪽에 잘 배치했는가까지 점수화
+# Precision@K = 추천 리스트 상위 k개 중 정답이 몇 개 들어있나. (상위 k개 중 정답 개수) / k
+# AP@K (Average Precision) = 추천 리스트를 쭉 보다가, 정답이 나올 때마다 Precision@K 기록 후 그 기록값들을 평균. (정답이 나올때의 Precision 값들의 평균) / 정답 개수
+# MAP@K (Mean Average Precision) = 여러 사용자에 대해 AP를 구한 후 평균냄
 
 
-def recall_at_k(recommended_items, ground_truth, k=10):
+def rmse_score(y_true, y_pred):
     """
-    Recall@K
+    Compute Root Mean Sqaured Error.
+    RMSE = sqrt((1/N) * Σ (y_true_i - y_pred)^2)
     """
-    recommended_k = recommended_items[:k]
-    hits = len(set(recommended_k) & set(ground_truth))
-    return hits / len(ground_truth) if ground_truth else 0.0
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+    rmse = np.sqrt(np.mean((y_true - y_pred)**2))
+    return rsme
 
 
-def average_precision(recommended_items, ground_truth, k=10):
+def average_precision_at_k(preds, ground_truth, k=10):
     """
-    MAP 계산에 쓰이는 AP@K
+    Args:
+        preds: 추천 결과 리스트 (길이 >= k)
+        ground_truth: 정답 아이템 집합 (set)
+        k: 상위 몇 개까지 볼지
+
+    Return:
+        AP@k (float)
     """
-    score = 0.0
+    if not ground_truth:
+        return 0.0
+
     hits = 0
-    for i, item in enumerate(recommended_items[:k], start=1):
-        if item in ground_truth:
+    sum_precisions = 0.0
+
+    for i, p in enumerate(preds[:k], start=1):
+        if p in ground_truth:
             hits += 1
-            score += hits / i
-    return score / min(len(ground_truth), k) if ground_truth else 0.0
+            precision_at_i = hits / i
+            sum_pricisions += precision_at_i
+
+    return sum_precisions / len(ground_truth)  # min(len(ground_truth), k)
 
 
-def ndcg_at_k(recommended_items, ground_truth, k=10):
+def ndcg_at_k(y_true, y_score, k=10):
     """
-    NDCG@K
+    Compute Normalized Discounted Cumulative Gain at rank k
+    for implicit feedback data (0/1 relevance).
+    
+    NDCG:
+        1. DCG@K = Σ(rel_i / log2(i+2)), i=0,...,k-1
+            - rel_i: 정답 relevance (예: 구매/ㄱ)
+        2. IDCG@k = 이상적인 DCG (relevance를 내림차순 정렬했을 때)
+        3. NDCG@k = DCG@k / IDCG@K
     """
-    dcg = 0.0
-    for i, item in enumerate(recommended_items[:k], start=1):
-        if item in ground_truth:
-            dcg += 1 / np.log2(i + 1)
-    # ideal DCG
-    idcg = sum(1 / np.log2(i + 1) for i in range(1, min(len(ground_truth), k) + 1))
+    y_true = np.array(y_true)
+    y_score = np.array(y_score)
+
+    order = np.argsort(y_score)[::-1][:k]
+    gains = y_true[order]
+
+    discounts = np.log2(np.arange(2, k + 2))
+    dcg = np.sum((2**gains - 1) / discounts)
+
+    ideal_order = np.sort(y_true)[::-1][:k]
+    idcg = np.sum(2**ideal_order -1) / discounts)
+
     return dcg / idcg if idcg > 0 else 0.0
-
-
-def evaluate_model(model, test_interactions, train_interactions, k=10):
-    """
-    모델 전체 평가
-    model: 학습된 ALS 모델 (user_vecs, item_vecs 속성 보유)
-    test_interactions: dict {user: set(items)} 테스트 데이터
-    train_interactions: dict {user: set(items)} 학습 데이터 (이미 본 아이템 제외 목적)
-    """
-    precisions, recalls, maps, ndcgs = [], [], [], []
-
-    for user, true_items in test_interactions.items():
-        if not true_items:
-            continue
-
-        # 모든 아이템에 대해 점수 예측
-        scores = model.user_vecs[user] @ model.item_vecs.T
-        # 학습에서 이미 본 아이템은 제외
-        seen = train_interactions.get(user, set())
-        scores[list(seen)] = -np.inf
-
-        # 추천 상위 k개
-        recommended = np.argsort(-scores)[:k]
-
-        # 각 지표 계산
-        precisions.append(precision_at_k(recommended, true_items, k))
-        recalls.append(recall_at_k(recommended, true_items, k))
-        maps.append(average_precision(recommended, true_items, k))
-        ndcgs.append(ndcg_at_k(recommended, true_items, k))
-
-    return {
-        "precision": np.mean(precisions) if precisions else 0.0,
-        "recall": np.mean(recalls) if recalls else 0.0,
-        "map": np.mean(maps) if maps else 0.0,
-        "ndcg": np.mean(ndcgs) if ndcgs else 0.0
-    }
